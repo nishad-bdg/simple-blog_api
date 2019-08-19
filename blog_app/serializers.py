@@ -26,14 +26,17 @@ class BlogCategorySerializer(serializers.ModelSerializer):
             'updated'
         )
 
-
 class UserSerializer(serializers.ModelSerializer):
     user_blogs = BlogSerializer(many = True, read_only = True)
     class Meta:
         model = User
         fields = '__all__'
         read_only_fields = (
-            'id','date_joined','last_login','groups','user_permissions',
+            'id',
+            'date_joined',
+            'last_login',
+            'groups',
+            'user_permissions',
         )
     def create(self,validated_data):
         user = super().create(validated_data)

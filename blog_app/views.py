@@ -11,18 +11,23 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view,permission_classes,renderer_classes
 from rest_framework.permissions import IsAuthenticated,AllowAny,IsAdminUser,IsAuthenticatedOrReadOnly
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.generics import ListAPIView
 from blog_app.models import *
 from blog_app.serializers import *
+
 # Create your views here.
 
 class CategoryList(APIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = BlogCategorySerializer
+    pagination_class = PageNumberPagination
+
     
     def get(self,request,format = None):
         instance = BlogCategory.objects.all()
         serializer = BlogCategorySerializer(instance, many = True)
-        return Response(serializer.data)
+        return Response({'results':serializer.data})
 
     def post(self,request,format = None):
         response = {}
@@ -34,14 +39,48 @@ class CategoryList(APIView):
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
 
 
+class CategoryDetail(APIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = BlogCategorySerializer
+
+    def get_object(self, slug):
+        try:
+            return BlogCategory.objects.get(slug = slug)
+        except BlogCategory.DoesNotExist:
+            raise Http404
+    
+    def get(self,request,slug,format = None):
+        instance = self.get_object(slug)
+        serializer = BlogCategorySerializer(instance)
+        return Response(serializer.data)
+    
+    def put(self,request,slug,format = None):
+        instance = self.get_object(slug)
+        response = {}
+        serializer = BlogCategorySerializer(instance,data = request.data)
+        if serializer.is_valid():
+            serializer.save()
+            response['success'] = "Category updated successfully"
+            return Response(response, status = status.HTTP_200_OK)
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self,request,slug,format = None):
+        instance = self.get_object(slug)
+        if request.user.is_superuser:
+            instance.delete()
+            return Response(status = status.HTTP_204_NO_CONTENT)
+        else:
+            return Response({"errors":["Access denied"]})
+
 class BlogList(APIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = BlogSerializer
+    pagination_class = PageNumberPagination
     
     def get(self,request,format = None):
         instance = Blog.objects.all()
         serializer = BlogSerializer(instance, many = True)
-        return Response(serializer.data)
+        return Response({'results':serializer.data})
 
     def post(self,request,format = None):
         response = {}

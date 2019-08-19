@@ -6,6 +6,7 @@ from blog_app.utils import *
 # Create your models here.
 class BlogCategory(models.Model):
     category_name = models.CharField(max_length = 50, unique = True)
+    category_image = models.ImageField(upload_to = 'category/', default = 'category/default.jpg')
     slug = models.SlugField(unique = True, null = True, blank = True)
     created = models.DateTimeField(auto_now_add = True, auto_now = False)
     updated = models.DateTimeField(auto_now_add = False, auto_now = True)
